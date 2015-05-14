@@ -316,9 +316,15 @@ int ns_resolve(const char *domain_name, char *ip_addr_buf, size_t buf_len);
 //
 // $Date: 2014-09-28 05:04:41 UTC $
 
+void *maybe_malloc(size_t bytes) {
+  if (rand() % 10 == 0) {
+    return NULL;
+  }
+  return malloc(bytes);
+}
 
 #ifndef NS_MALLOC
-#define NS_MALLOC malloc
+#define NS_MALLOC maybe_malloc
 #endif
 
 #ifndef NS_REALLOC
@@ -4692,10 +4698,10 @@ static void send_continue_if_expected(struct connection *conn) {
 // Conform to http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5.1.2
 static int is_valid_uri(const char *uri) {
   unsigned short n;
-  return uri[0] == '/' ||
+  return uri && (uri[0] == '/' ||
     strcmp(uri, "*") == 0 ||            // OPTIONS method can use asterisk URI
     mg_strncasecmp(uri, "http", 4) == 0 || // Naive check for the absolute URI
-    sscanf(uri, "%*[^ :]:%hu", &n) > 0; // CONNECT method can use host:port
+    sscanf(uri, "%*[^ :]:%hu", &n) > 0); // CONNECT method can use host:port
 }
 
 static void try_parse(struct connection *conn) {
